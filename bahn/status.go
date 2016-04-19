@@ -6,8 +6,10 @@ import (
 	"time"
 )
 
+// StatusURL is the URL of the status API call.
 const StatusURL = "http://ice.portal/jetty/api/v1/status"
 
+// Status holds the information returned by the status API call.
 type Status struct {
 	Connection   bool
 	ServiceLevel string
@@ -17,6 +19,7 @@ type Status struct {
 	ServerTime   time.Time
 }
 
+// UnmarshalJSON implements the encoding/json.Unmarshaler interface.
 func (s *Status) UnmarshalJSON(b []byte) error {
 	var parsed struct {
 		Connection   bool
@@ -42,6 +45,7 @@ func (s *Status) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+// StatusInfo calls the status API and returns the parsed data.
 func StatusInfo() (*Status, error) {
 	res, err := http.Get(StatusURL)
 	if err != nil {

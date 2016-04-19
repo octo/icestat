@@ -7,8 +7,10 @@ import (
 	"time"
 )
 
+// TripInfoURL is the URL of the tripInfo API call.
 const TripInfoURL = "http://ice.portal/jetty/api/v1/tripInfo"
 
+// Station is a train station.
 type Station struct {
 	ID        string
 	Name      string
@@ -44,8 +46,9 @@ func (s Station) String() string {
 	return s.Name
 }
 
+// Stop is a scheduled stop along the route.
 type Stop struct {
-	Station              Station
+	Station              *Station
 	Platform             string
 	DistanceFromStart    float64
 	DistanceFromLastStop float64
@@ -59,7 +62,7 @@ type Stop struct {
 // UnmarshalJSON implements the encoding/json.Unmarshaler interface.
 func (s *Stop) UnmarshalJSON(b []byte) error {
 	var parsed struct {
-		Station Station
+		Station *Station
 		Track   struct {
 			Actual, Scheduled string
 		}
@@ -200,8 +203,7 @@ func (t Trip) DistanceTo(s *Stop) float64 {
 	return s.DistanceFromStart - t.DistanceFromStart()
 }
 
-// TripInfo returns information about the trip, including stops along the way,
-// delays and information about the train.
+// TripInfo calls the tripInfo API and returns the parsed data.
 func TripInfo() (*Trip, error) {
 	res, err := http.Get(TripInfoURL)
 	if err != nil {
