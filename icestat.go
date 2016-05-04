@@ -6,14 +6,16 @@ import (
 	"log"
 	"math"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/octo/icestat/bahn"
 )
 
 var (
-	interval = flag.Duration("interval", 10*time.Second, "Interval in which to report statistics.")
-	count    = flag.Int("count", -1, "Number of iterations.")
+	interval    = flag.Duration("interval", 10*time.Second, "Interval in which to report statistics.")
+	count       = flag.Int("count", -1, "Number of iterations.")
+	destination = flag.String("destination", "", "Optional destination to anticipate.")
 )
 
 type speedDistribution struct {
@@ -100,7 +102,25 @@ func main() {
 		if nextStop == nil {
 			log.Fatal(trip)
 		}
+
 		finalStop := trip.Stops[len(trip.Stops)-1]
+		if *destination != "" {
+			var stations []string
+			found := false
+			// Use the first substring match for the desired destination.
+			for _, stop := range trip.Stops {
+				stations = append(stations, stop.Station.Name)
+				if strings.Contains(stop.Station.Name, *destination) {
+					found = true
+					finalStop = stop
+					break
+				}
+			}
+
+			if !found {
+				log.Fatalf("Destination %q not found in station list %q.", *destination, stations)
+			}
+		}
 
 		if nextStop == nil || finalStop == nil {
 			continue
