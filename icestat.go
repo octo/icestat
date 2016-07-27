@@ -96,10 +96,12 @@ func main() {
 		sd.add(s.Speed)
 
 		nextStop := trip.NextStop
-		if nextStop == nil {
-			log.Fatal(trip)
-		}
 		finalStop := trip.Stops[len(trip.Stops)-1]
+		if nextStop == nil {
+			fmt.Printf("Train arrived in %v\n", finalStop)
+			*count = 0
+			continue
+		}
 
 		if nextStop == nil || finalStop == nil {
 			continue
