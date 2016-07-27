@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"os"
 	"sort"
-	"strings"
 	"time"
 
 	"github.com/octo/icestat/bahn"
@@ -105,20 +105,15 @@ func main() {
 
 		finalStop := trip.Stops[len(trip.Stops)-1]
 		if *destination != "" {
-			var stations []string
-			found := false
-			// Use the first substring match for the desired destination.
-			for _, stop := range trip.Stops {
-				stations = append(stations, stop.Station.Name)
-				if strings.Contains(stop.Station.Name, *destination) {
-					found = true
-					finalStop = stop
-					break
-				}
-			}
+			var ok bool
+			finalStop, ok = trip.FindStop(*destination)
 
-			if !found {
-				log.Fatalf("Destination %q not found in station list %q.", *destination, stations)
+			if !ok {
+				log.Printf("stop %q not found. Valid stops are:", *destination)
+				for _, stop := range trip.Stops {
+					log.Printf("  * %q", stop.Station)
+				}
+				os.Exit(1)
 			}
 		}
 
