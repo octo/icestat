@@ -3,4 +3,4 @@ Package bahn implements methods for querying live trip information from within I
 
 See the LICENSE file for licensing details.
 */
-package bahn
+package bahn // import "github.com/octo/bahn"

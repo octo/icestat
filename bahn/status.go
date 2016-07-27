@@ -1,4 +1,4 @@
-package bahn
+package bahn // import "github.com/octo/bahn"
 
 import (
 	"encoding/json"
