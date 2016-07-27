@@ -112,6 +112,12 @@ func main() {
 			}
 		}
 
+		if finalStop.Passed {
+			fmt.Printf("Train has passed %v\n", finalStop)
+			*count = 0
+			continue
+		}
+
 		if nextStop == nil {
 			fmt.Printf("Train arrived in %v\n", trip.Stops[len(trip.Stops)-1])
 			*count = 0
