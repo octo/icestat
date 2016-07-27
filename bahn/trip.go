@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -186,7 +187,7 @@ func (t *Trip) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-func (t Trip) findStop(evaNr string) *Stop {
+func (t *Trip) findStop(evaNr string) *Stop {
 	for _, s := range t.Stops {
 		if s.Station.ID == evaNr {
 			return s
@@ -196,13 +197,27 @@ func (t Trip) findStop(evaNr string) *Stop {
 	return nil
 }
 
+// FindStop returns the first Stop in t where the station name matches name.
+// This function uses a submatch to find a matching station, so that you can
+// specify a city name, e.g. "Basel", and don't have to specify the exact
+// station name, e.g. "Basel Bad Bf".
+func (t *Trip) FindStop(name string) (*Stop, bool) {
+	for _, stop := range t.Stops {
+		if strings.Contains(stop.Station.Name, name) {
+			return stop, true
+		}
+	}
+
+	return nil, false
+}
+
 // DistanceFromStart returns the distance, in kilometers, from the beginning of the trip.
-func (t Trip) DistanceFromStart() float64 {
+func (t *Trip) DistanceFromStart() float64 {
 	return t.PreviousStop.DistanceFromStart + t.DistanceFromLastStop
 }
 
 // DistanceTo returns the distance, in kilometers, between the current position and s.
-func (t Trip) DistanceTo(s *Stop) float64 {
+func (t *Trip) DistanceTo(s *Stop) float64 {
 	return s.DistanceFromStart - t.DistanceFromStart()
 }
 

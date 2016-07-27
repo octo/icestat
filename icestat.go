@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"os"
 	"sort"
 	"time"
 
@@ -12,8 +13,9 @@ import (
 )
 
 var (
-	interval = flag.Duration("interval", 10*time.Second, "Interval in which to report statistics.")
-	count    = flag.Int("count", -1, "Number of iterations.")
+	interval    = flag.Duration("interval", 10*time.Second, "Interval in which to report statistics.")
+	count       = flag.Int("count", -1, "Number of iterations.")
+	destination = flag.String("destination", "", "Optional destination to anticipate.")
 )
 
 type speedDistribution struct {
@@ -97,8 +99,21 @@ func main() {
 
 		nextStop := trip.NextStop
 		finalStop := trip.Stops[len(trip.Stops)-1]
+		if *destination != "" {
+			var ok bool
+			finalStop, ok = trip.FindStop(*destination)
+
+			if !ok {
+				log.Printf("stop %q not found. Valid stops are:", *destination)
+				for _, stop := range trip.Stops {
+					log.Printf("  * %q", stop.Station)
+				}
+				os.Exit(1)
+			}
+		}
+
 		if nextStop == nil {
-			fmt.Printf("Train arrived in %v\n", finalStop)
+			fmt.Printf("Train arrived in %v\n", trip.Stops[len(trip.Stops)-1])
 			*count = 0
 			continue
 		}
