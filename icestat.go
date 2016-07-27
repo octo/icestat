@@ -80,7 +80,6 @@ func main() {
 		if *count > 0 {
 			*count -= 1
 		}
-		time.Sleep(*interval)
 
 		trip, err := bahn.TripInfo()
 		if err != nil {
@@ -116,5 +115,9 @@ func main() {
 			formatDuration(finalStop.ETA()), formatDuration(nextStop.ETA()),
 			formatDuration(finalStop.Delay()), formatDuration(nextStop.Delay()),
 			s.Speed, sd.average(), sd.max())
+
+		if *count != 0 {
+			time.Sleep(*interval)
+		}
 	}
 }
