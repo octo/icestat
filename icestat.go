@@ -86,12 +86,14 @@ func main() {
 		trip, err := bahn.TripInfo()
 		if err != nil {
 			log.Print("TripInfo: ", err)
+			time.Sleep(*interval)
 			continue
 		}
 
 		s, err := bahn.StatusInfo()
 		if err != nil {
 			log.Print("StatusInfo: ", err)
+			time.Sleep(*interval)
 			continue
 		}
 
@@ -114,17 +116,16 @@ func main() {
 
 		if finalStop.Passed {
 			fmt.Printf("Train has passed %v\n", finalStop)
-			*count = 0
-			continue
+			break
 		}
 
 		if nextStop == nil {
 			fmt.Printf("Train arrived in %v\n", trip.Stops[len(trip.Stops)-1])
-			*count = 0
-			continue
+			break
 		}
 
 		if nextStop == nil || finalStop == nil {
+			time.Sleep(*interval)
 			continue
 		}
 
