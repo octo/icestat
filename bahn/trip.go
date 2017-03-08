@@ -12,7 +12,7 @@ import (
 // const TripInfoURL = "http://ice.portal/jetty/api/v1/tripInfo"
 
 // TripInfoURL is the URL of JSON encoded information about the train's schedule.
-const TripInfoURL = "http://ice.portal2/api1/rs/tripInfo"
+const TripInfoURL = "https://portal.imice.de/api1/rs/tripInfo"
 
 // Station is a train station.
 type Station struct {
