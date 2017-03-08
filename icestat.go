@@ -90,14 +90,14 @@ func main() {
 			continue
 		}
 
-		s, err := bahn.StatusInfo()
+		pos, err := bahn.PositionInfo()
 		if err != nil {
-			log.Print("StatusInfo: ", err)
+			log.Print("PositionInfo: ", err)
 			time.Sleep(*interval)
 			continue
 		}
 
-		sd.add(s.Speed)
+		sd.add(pos.Speed)
 
 		nextStop := trip.NextStop
 		finalStop := trip.Stops[len(trip.Stops)-1]
@@ -138,7 +138,7 @@ func main() {
 			trip.DistanceTo(finalStop), trip.DistanceTo(nextStop),
 			formatDuration(finalStop.ETA()), formatDuration(nextStop.ETA()),
 			formatDuration(finalStop.Delay()), formatDuration(nextStop.Delay()),
-			s.Speed, sd.average(), sd.max())
+			pos.Speed, sd.average(), sd.max())
 
 		if *count != 0 {
 			time.Sleep(*interval)
