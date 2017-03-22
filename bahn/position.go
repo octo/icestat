@@ -3,7 +3,6 @@ package bahn // import "github.com/octo/icestat/bahn"
 import (
 	"encoding/json"
 	"net/http"
-	"strconv"
 	"time"
 )
 
@@ -23,46 +22,20 @@ type Position struct {
 	Satellites int
 }
 
-// quotedFloat64 helps parsing quoted strings as floats.
-type quotedFloat64 float64
-
-func (f *quotedFloat64) UnmarshalText(text []byte) error {
-	parsed, err := strconv.ParseFloat(string(text), 64)
-	if err != nil {
-		return err
-	}
-
-	*f = quotedFloat64(parsed)
-	return nil
-}
-
-// quotedInt helps parsing quoted strings as ints.
-type quotedInt int
-
-func (i *quotedInt) UnmarshalText(text []byte) error {
-	parsed, err := strconv.ParseInt(string(text), 0, 0)
-	if err != nil {
-		return err
-	}
-
-	*i = quotedInt(parsed)
-	return nil
-}
-
 // UnmarshalJSON implements the encoding/json.Unmarshaler interface.
 func (p *Position) UnmarshalJSON(b []byte) error {
 	var parsed struct {
 		Version   string
-		Time      quotedInt
+		Time      int `json:",string"`
 		Age       string
-		Latitude  quotedFloat64
-		Longitude quotedFloat64
-		Altitude  quotedFloat64
+		Latitude  float64 `json:",string"`
+		Longitude float64 `json:",string"`
+		Altitude  float64 `json:",string"`
 		// Speed in m/s.
-		Speed quotedFloat64
+		Speed float64 `json:",string"`
 		// Gyroskop?
 		CMG        string
-		Satellites quotedInt
+		Satellites int `json:",string"`
 		Mode       string
 	}
 	if err := json.Unmarshal(b, &parsed); err != nil {
