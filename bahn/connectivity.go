@@ -155,6 +155,11 @@ func (l *Link) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+// Up returns true if the interface is up and connected.
+func (l *Link) Up() bool {
+	return l.DeviceState == Up && l.LinkState == Available
+}
+
 // Connectivity holds information about the train's upstream internet
 // connections.
 type Connectivity struct {

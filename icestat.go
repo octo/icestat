@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log"
 	"math"
-	"os"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/octo/icestat/bahn"
@@ -73,9 +73,134 @@ func formatDuration(d time.Duration) string {
 	return fmt.Sprintf("%.0f:%02.0f", h, m)
 }
 
-func main() {
-	var sd speedDistribution
+func printTrip(trip *bahn.Trip) error {
+	finalStop := trip.Stops[len(trip.Stops)-1]
+	nextStop := trip.NextStop
+	if nextStop == nil {
+		return fmt.Errorf("train arrived in %v", finalStop)
+	}
 
+	destinationStop := finalStop
+	if *destination != "" {
+		var ok bool
+		destinationStop, ok = trip.FindStop(*destination)
+
+		if !ok {
+			var stops []string
+			for _, stop := range trip.Stops {
+				stops = append(stops, stop.Station.Name)
+			}
+
+			return fmt.Errorf("stop %q not found. Valid stops are: ",
+				*destination, strings.Join(stops, ", "))
+		}
+	}
+
+	if destinationStop.Passed {
+		return fmt.Errorf("train has passed %v", destinationStop)
+	}
+
+	if destinationStop != nextStop {
+		fmt.Printf("%s%s to %q (via %q): "+
+			"distance=%.0f(%.0f) km, "+
+			"eta=%s(%s), "+
+			"delay=%s(%s)",
+			trip.TrainType, trip.TrainID, destinationStop.Station, nextStop.Station,
+			trip.DistanceTo(destinationStop), trip.DistanceTo(nextStop),
+			formatDuration(destinationStop.ETA()), formatDuration(nextStop.ETA()),
+			formatDuration(destinationStop.Delay()), formatDuration(nextStop.Delay()))
+	} else {
+		fmt.Printf("%s%s to %q: "+
+			"distance=%.0f km, "+
+			"eta=%s, "+
+			"delay=%s",
+			trip.TrainType, trip.TrainID, destinationStop.Station,
+			trip.DistanceTo(destinationStop),
+			formatDuration(destinationStop.ETA()),
+			formatDuration(destinationStop.Delay()))
+	}
+
+	return nil
+}
+
+var speed speedDistribution
+
+func printSpeed() error {
+	pos, err := bahn.PositionInfo()
+	if err != nil {
+		return err
+	}
+	speed.add(pos.Speed)
+
+	fmt.Printf(", speed=%.0f/%.0f/%.0f [km/h] (cur/avg/max)",
+		pos.Speed, speed.average(), speed.max())
+
+	return nil
+}
+
+func formatRSSI(rssi float64) string {
+	symbols := []string{"█", "▇", "▆", "▅", "▄", "▃", "▂", "▁"}
+
+	// TODO(octo): these levels assume 3G/HSPA and should be adapted for 4G/LTE.
+	lowerBounds := []float64{-67.5, -75.0, -82.5, -90.0, -95.0, -100.0, -105.0}
+
+	for i, lb := range lowerBounds {
+		if rssi >= lb {
+			return symbols[i]
+		}
+	}
+	return symbols[len(symbols)-1]
+}
+
+func printConnectivity() error {
+	c, err := bahn.ConnectivityInfo()
+	if err != nil {
+		return err
+	}
+
+	state := "offline"
+	if c.Online {
+		state = "online"
+	}
+
+	var linksUp int
+	var rssiIndicators []string
+	for _, link := range c.Links {
+		if link.Up() {
+			linksUp++
+			rssiIndicators = append(rssiIndicators, formatRSSI(link.RSSI))
+		} else {
+			rssiIndicators = append(rssiIndicators, " ")
+		}
+	}
+
+	fmt.Printf(", wifi=%s [%s] (%d/%d)", state, strings.Join(rssiIndicators, ""), linksUp, len(c.Links))
+	return nil
+}
+
+func printUpdate() error {
+	trip, err := bahn.TripInfo()
+	if err != nil {
+		return err
+	}
+
+	if err := printTrip(trip); err != nil {
+		return err
+	}
+
+	if err := printSpeed(); err != nil {
+		return err
+	}
+
+	if err := printConnectivity(); err != nil {
+		return err
+	}
+
+	fmt.Println()
+	return nil
+}
+
+func main() {
 	flag.Parse()
 
 	for *count != 0 {
@@ -83,62 +208,11 @@ func main() {
 			*count -= 1
 		}
 
-		trip, err := bahn.TripInfo()
-		if err != nil {
-			log.Print("TripInfo: ", err)
+		if err := printUpdate(); err != nil {
+			log.Println(err)
 			time.Sleep(*interval)
 			continue
 		}
-
-		pos, err := bahn.PositionInfo()
-		if err != nil {
-			log.Print("PositionInfo: ", err)
-			time.Sleep(*interval)
-			continue
-		}
-
-		sd.add(pos.Speed)
-
-		nextStop := trip.NextStop
-		finalStop := trip.Stops[len(trip.Stops)-1]
-		if *destination != "" {
-			var ok bool
-			finalStop, ok = trip.FindStop(*destination)
-
-			if !ok {
-				log.Printf("stop %q not found. Valid stops are:", *destination)
-				for _, stop := range trip.Stops {
-					log.Printf("  * %q", stop.Station)
-				}
-				os.Exit(1)
-			}
-		}
-
-		if finalStop.Passed {
-			fmt.Printf("Train has passed %v\n", finalStop)
-			break
-		}
-
-		if nextStop == nil {
-			fmt.Printf("Train arrived in %v\n", trip.Stops[len(trip.Stops)-1])
-			break
-		}
-
-		if nextStop == nil || finalStop == nil {
-			time.Sleep(*interval)
-			continue
-		}
-
-		fmt.Printf("%s%s to %q (via %q): "+
-			"distance=%.0f(%.0f) km, "+
-			"eta=%s(%s), "+
-			"delay=%s(%s), "+
-			"speed=%.0f/%.0f/%.0f km/h (cur/avg/max)\n",
-			trip.TrainType, trip.TrainID, finalStop.Station, nextStop.Station,
-			trip.DistanceTo(finalStop), trip.DistanceTo(nextStop),
-			formatDuration(finalStop.ETA()), formatDuration(nextStop.ETA()),
-			formatDuration(finalStop.Delay()), formatDuration(nextStop.Delay()),
-			pos.Speed, sd.average(), sd.max())
 
 		if *count != 0 {
 			time.Sleep(*interval)
