@@ -1,10 +1,12 @@
 package main
 
 import (
+	"crypto/tls"
 	"flag"
 	"fmt"
 	"log"
 	"math"
+	"net/http"
 	"sort"
 	"strings"
 	"time"
@@ -202,6 +204,18 @@ func printUpdate() error {
 
 func main() {
 	flag.Parse()
+
+	// Patch net/http's DefaultTransport to ignore invalid TLS certificates.
+	// This is required to work around Deutsche Bahn's broken TLS setup
+	// (they're serving their on-train content with the bahn.de certificate.
+	// TODO(octo): Remove once DB fixes their TLS setup.
+	if t, ok := http.DefaultTransport.(*http.Transport); ok {
+		if t.TLSClientConfig == nil {
+			t.TLSClientConfig = &tls.Config{}
+		}
+		t.TLSClientConfig.InsecureSkipVerify = true
+		log.Print("disabled TLS certificate verification")
+	}
 
 	for *count != 0 {
 		if *count > 0 {
