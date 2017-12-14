@@ -2,6 +2,7 @@ package bahn // import "github.com/octo/icestat/bahn"
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 )
@@ -59,12 +60,12 @@ func (p *Position) UnmarshalJSON(b []byte) error {
 func PositionInfo() (*Position, error) {
 	res, err := http.Get(PositionURL)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GET %s: %v", PositionURL, err)
 	}
 
 	var p Position
 	if err := unmarshalJSONP(res.Body, &p); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unmarshal %s: %v", PositionURL, err)
 	}
 	return &p, nil
 }
