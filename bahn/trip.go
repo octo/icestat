@@ -213,7 +213,10 @@ func (t *Trip) FindStop(name string) (*Stop, bool) {
 
 // DistanceFromStart returns the distance, in kilometers, from the beginning of the trip.
 func (t *Trip) DistanceFromStart() float64 {
-	return t.PreviousStop.DistanceFromStart + t.DistanceFromLastStop
+	if t.PreviousStop != nil {
+		return t.PreviousStop.DistanceFromStart + t.DistanceFromLastStop
+	}
+	return t.DistanceFromLastStop
 }
 
 // DistanceTo returns the distance, in kilometers, between the current position and s.
