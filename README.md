@@ -5,7 +5,7 @@ Germany's high speed trains, *InterCity Express* (ICE).
 
 ## Usage
 
-Start *icestat* while on the train and connected to the `Telekom_ICE` wifi. No
+Start *icestat* while on the train and connected to the `WIFIonICE` wifi. No
 arguments are required.
 
 ## License
