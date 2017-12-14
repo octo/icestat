@@ -1,6 +1,7 @@
 package bahn // import "github.com/octo/icestat/bahn"
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -225,8 +226,14 @@ func (t *Trip) DistanceTo(s *Stop) float64 {
 }
 
 // TripInfo calls the tripInfo API and returns the parsed data.
-func TripInfo() (*Trip, error) {
-	res, err := http.Get(TripInfoURL)
+func TripInfo(ctx context.Context) (*Trip, error) {
+	req, err := http.NewRequest(http.MethodGet, TripInfoURL, nil)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+
+	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
 	}

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"crypto/tls"
 	"flag"
 	"fmt"
@@ -127,15 +128,15 @@ func printTrip(trip *bahn.Trip) error {
 
 var speed speedDistribution
 
-func printSpeed() error {
-	pos, err := bahn.PositionInfo()
+func printSpeed(ctx context.Context) error {
+	s, err := bahn.StatusInfo(ctx)
 	if err != nil {
 		return err
 	}
-	speed.add(pos.Speed)
+	speed.add(s.Speed)
 
 	fmt.Printf(", speed=%.0f/%.0f/%.0f [km/h] (cur/avg/max)",
-		pos.Speed, speed.average(), speed.max())
+		s.Speed, speed.average(), speed.max())
 
 	return nil
 }
@@ -180,8 +181,8 @@ func printConnectivity() error {
 	return nil
 }
 
-func printUpdate() error {
-	trip, err := bahn.TripInfo()
+func printUpdate(ctx context.Context) error {
+	trip, err := bahn.TripInfo(ctx)
 	if err != nil {
 		return err
 	}
@@ -192,7 +193,7 @@ func printUpdate() error {
 		return err
 	}
 
-	if err := printSpeed(); err != nil {
+	if err := printSpeed(ctx); err != nil {
 		return err
 	}
 
@@ -205,6 +206,7 @@ func printUpdate() error {
 
 func main() {
 	flag.Parse()
+	ctx := context.Background()
 
 	// Patch net/http's DefaultTransport to ignore invalid TLS certificates.
 	// This is required to work around Deutsche Bahn's broken TLS setup
@@ -223,11 +225,14 @@ func main() {
 			*count -= 1
 		}
 
-		if err := printUpdate(); err != nil {
+		ctx, cancel := context.WithTimeout(ctx, *interval)
+		if err := printUpdate(ctx); err != nil {
+			cancel()
 			log.Println(err)
 			time.Sleep(*interval)
 			continue
 		}
+		cancel()
 
 		if *count != 0 {
 			time.Sleep(*interval)

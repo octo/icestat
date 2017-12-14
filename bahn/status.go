@@ -1,6 +1,7 @@
 package bahn // import "github.com/octo/icestat/bahn"
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"time"
@@ -49,8 +50,14 @@ func (s *Status) UnmarshalJSON(b []byte) error {
 }
 
 // StatusInfo calls the status API and returns the parsed data.
-func StatusInfo() (*Status, error) {
-	res, err := http.Get(StatusURL)
+func StatusInfo(ctx context.Context) (*Status, error) {
+	req, err := http.NewRequest(http.MethodGet, StatusURL, nil)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+
+	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
