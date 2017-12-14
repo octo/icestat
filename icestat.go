@@ -141,46 +141,6 @@ func printSpeed(ctx context.Context) error {
 	return nil
 }
 
-func formatRSSI(rssi float64) string {
-	symbols := []string{"█", "▇", "▆", "▅", "▄", "▃", "▂", "▁"}
-
-	// TODO(octo): these levels assume 3G/HSPA and should be adapted for 4G/LTE.
-	lowerBounds := []float64{-67.5, -75.0, -82.5, -90.0, -95.0, -100.0, -105.0}
-
-	for i, lb := range lowerBounds {
-		if rssi >= lb {
-			return symbols[i]
-		}
-	}
-	return symbols[len(symbols)-1]
-}
-
-func printConnectivity() error {
-	c, err := bahn.ConnectivityInfo()
-	if err != nil {
-		return err
-	}
-
-	state := "offline"
-	if c.Online {
-		state = "online"
-	}
-
-	var linksUp int
-	var rssiIndicators []string
-	for _, link := range c.Links {
-		if link.Up() {
-			linksUp++
-			rssiIndicators = append(rssiIndicators, formatRSSI(link.RSSI))
-		} else {
-			rssiIndicators = append(rssiIndicators, " ")
-		}
-	}
-
-	fmt.Printf(", wifi=%s [%s] (%d/%d)", state, strings.Join(rssiIndicators, ""), linksUp, len(c.Links))
-	return nil
-}
-
 func printUpdate(ctx context.Context) error {
 	trip, err := bahn.TripInfo(ctx)
 	if err != nil {
@@ -194,10 +154,6 @@ func printUpdate(ctx context.Context) error {
 	}
 
 	if err := printSpeed(ctx); err != nil {
-		return err
-	}
-
-	if err := printConnectivity(); err != nil {
 		return err
 	}
 
