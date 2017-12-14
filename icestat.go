@@ -186,6 +186,8 @@ func printUpdate() error {
 		return err
 	}
 
+	defer fmt.Println()
+
 	if err := printTrip(trip); err != nil {
 		return err
 	}
@@ -198,7 +200,6 @@ func printUpdate() error {
 		return err
 	}
 
-	fmt.Println()
 	return nil
 }
 
