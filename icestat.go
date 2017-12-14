@@ -92,7 +92,7 @@ func printTrip(trip *bahn.Trip) error {
 				stops = append(stops, stop.Station.Name)
 			}
 
-			return fmt.Errorf("stop %q not found. Valid stops are: ",
+			return fmt.Errorf("stop %q not found. Valid stops are: %s",
 				*destination, strings.Join(stops, ", "))
 		}
 	}
