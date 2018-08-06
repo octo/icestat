@@ -7,11 +7,8 @@ import (
 	"time"
 )
 
-// Legacy URL, may be used by old systems.
-// const StatusURL = "http://ice.portal/jetty/api/v1/status"
-
 // StatusURL is the URL of JSON encoded information about the train's location and speed.
-const StatusURL = "https://portal.imice.de/api1/rs/status"
+const StatusURL = "https://iceportal.de/api1/rs/status"
 
 // Status holds the information returned by the status API call.
 type Status struct {
