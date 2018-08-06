@@ -237,6 +237,7 @@ func TripInfo(ctx context.Context) (*Trip, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer res.Body.Close()
 
 	var t Trip
 	if err := json.NewDecoder(res.Body).Decode(&t); err != nil {
