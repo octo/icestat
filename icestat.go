@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -75,6 +76,10 @@ func formatDuration(d time.Duration) string {
 }
 
 func printTrip(trip *bahn.Trip) error {
+	if len(trip.Stops) == 0 {
+		return errors.New("trip contains no strops")
+	}
+
 	finalStop := trip.Stops[len(trip.Stops)-1]
 	nextStop := trip.NextStop
 	if nextStop == nil {
