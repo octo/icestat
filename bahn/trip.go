@@ -9,11 +9,8 @@ import (
 	"time"
 )
 
-// Legacy URL, may be used by old systems.
-// const TripInfoURL = "http://ice.portal/jetty/api/v1/tripInfo"
-
 // TripInfoURL is the URL of JSON encoded information about the train's schedule.
-const TripInfoURL = "https://portal.imice.de/api1/rs/tripInfo"
+const TripInfoURL = "https://iceportal.de/api1/rs/tripInfo/trip"
 
 // Station is a train station.
 type Station struct {
@@ -151,21 +148,24 @@ type Trip struct {
 // UnmarshalJSON implements the encoding/json.Unmarshaler interface.
 func (t *Trip) UnmarshalJSON(b []byte) error {
 	var parsed struct {
-		ActualPosition       int
-		DistanceFromLastStop int
-		VZN                  string
-		TrainType            string
-		TripDate             string
-		StopInfo             struct {
-			FinalStationName  string
-			ScheduledNext     string
-			ActualNext        string
-			FinalStationEvaNr string
-			ActualLastStarted string
-			ActualLast        string
+		Trip struct {
+			ActualPosition       int
+			DistanceFromLastStop int
+			VZN                  string
+			TrainType            string
+			TripDate             string
+			StopInfo             struct {
+				FinalStationName  string
+				ScheduledNext     string
+				ActualNext        string
+				FinalStationEvaNr string
+				ActualLastStarted string
+				ActualLast        string
+			}
+			TotalDistance int
+			Stops         []*Stop
 		}
-		TotalDistance int
-		Stops         []*Stop
+		// TODO(octo): connection, selectedRoute
 	}
 
 	if err := json.Unmarshal(b, &parsed); err != nil {
@@ -173,17 +173,17 @@ func (t *Trip) UnmarshalJSON(b []byte) error {
 	}
 
 	*t = Trip{
-		TrainID:              parsed.VZN,
-		TrainType:            parsed.TrainType,
-		ActualPosition:       parsed.ActualPosition,
-		DistanceFromLastStop: float64(parsed.DistanceFromLastStop) / 1000.0,
-		TotalDistance:        float64(parsed.TotalDistance) / 1000.0,
-		Stops:                parsed.Stops,
+		TrainID:              parsed.Trip.VZN,
+		TrainType:            parsed.Trip.TrainType,
+		ActualPosition:       parsed.Trip.ActualPosition,
+		DistanceFromLastStop: float64(parsed.Trip.DistanceFromLastStop) / 1000.0,
+		TotalDistance:        float64(parsed.Trip.TotalDistance) / 1000.0,
+		Stops:                parsed.Trip.Stops,
 	}
 
-	t.Date, _ = time.Parse("2006-01-02", parsed.TripDate)
-	t.NextStop = t.findStop(parsed.StopInfo.ActualNext)
-	t.PreviousStop = t.findStop(parsed.StopInfo.ActualLast)
+	t.Date, _ = time.Parse("2006-01-02", parsed.Trip.TripDate)
+	t.NextStop = t.findStop(parsed.Trip.StopInfo.ActualNext)
+	t.PreviousStop = t.findStop(parsed.Trip.StopInfo.ActualLast)
 
 	return nil
 }
