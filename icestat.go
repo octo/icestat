@@ -77,7 +77,7 @@ func formatDuration(d time.Duration) string {
 
 func printTrip(trip *bahn.Trip) error {
 	if len(trip.Stops) == 0 {
-		return errors.New("trip contains no strops")
+		return errors.New("trip contains no stops")
 	}
 
 	finalStop := trip.Stops[len(trip.Stops)-1]
